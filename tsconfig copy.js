@@ -1,3 +1,4 @@
+// V1
 {
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
@@ -40,5 +41,19 @@
     "noUncheckedSideEffectImports": true,
     "moduleDetection": "force",
     "skipLibCheck": true,
+  }
+}
+
+// V2
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "esModuleInterop": true,
+    "verbatimModuleSyntax": true,
+    "skipLibCheck": true,
+    "strict": true,
+    "types": ["node"]
   }
 }
