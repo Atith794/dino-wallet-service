@@ -8,9 +8,11 @@ if (!connectionString) {
   throw new Error("DATABASE_URL is missing");
 }
 
+const isProd = process.env.NODE_ENV === "production";
+
 export const pool = new Pool({
   connectionString,
-  ssl: false,
+  ssl: isProd ? { rejectUnauthorized: false } : false,
 });
 
 export async function checkDbConnection() {
