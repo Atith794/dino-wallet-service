@@ -1,0 +1,515 @@
+{
+  "info": {
+    "_postman_id": "9b216a73-536a-4e0a-a316-d46273de2e80",
+    "name": "Dino Ventures Wallet Service",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "31613547"
+  },
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Wallet Read",
+      "item": [
+        {
+          "name": "GET /wallets/:walletId (meta)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"walletId matches\", () => pm.expect(pm.response.json().walletId).to.eql(Number(pm.collectionVariables.get('walletId'))));",
+                  "pm.test(\"asset present\", () => {",
+                  "  const j = pm.response.json();",
+                  "  pm.expect(j.asset).to.be.an('object');",
+                  "  pm.expect(j.asset.code).to.be.a('string');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /wallets/:walletId/balance",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"walletId matches\", () => pm.expect(pm.response.json().walletId).to.eql(Number(pm.collectionVariables.get('walletId'))));",
+                  "pm.test(\"balance is number\", () => pm.expect(pm.response.json().balance).to.be.a('number'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "balance"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Topup",
+      "item": [
+        {
+          "name": "POST /wallets/:walletId/topup (NEW referenceId)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('lastTopupRef', `topup_${pm.variables.replaceIn('{{$timestamp}}')}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"idempotent=false\", () => pm.expect(pm.response.json().idempotent).to.eql(false));",
+                  "pm.test(\"balance is number\", () => pm.expect(pm.response.json().balance).to.be.a('number'));",
+                  "pm.collectionVariables.set(\"balanceAfterTopup\", pm.response.json().balance);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"referenceId\": \"{{lastTopupRef}}\",\n  \"note\": \"Postman topup test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/topup",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "topup"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /wallets/:walletId/topup (IDEMPOTENT retry - same referenceId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"idempotent=true\", () => pm.expect(pm.response.json().idempotent).to.eql(true));",
+                  "",
+                  "const expected = Number(pm.collectionVariables.get(\"balanceAfterTopup\"));",
+                  "pm.test(\"balance unchanged on retry\", () => pm.expect(pm.response.json().balance).to.eql(expected));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"referenceId\": \"{{lastTopupRef}}\",\n  \"note\": \"Retry should be idempotent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/topup",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "topup"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Bonus",
+      "item": [
+        {
+          "name": "POST /wallets/:walletId/bonus (NEW referenceId)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('lastBonusRef', `bonus_${pm.variables.replaceIn('{{$timestamp}}')}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"idempotent=false\", () => pm.expect(pm.response.json().idempotent).to.eql(false));",
+                  "pm.test(\"balance is number\", () => pm.expect(pm.response.json().balance).to.be.a('number'));",
+                  "pm.collectionVariables.set(\"balanceAfterBonus\", pm.response.json().balance);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50,\n  \"referenceId\": \"{{lastBonusRef}}\",\n  \"note\": \"Postman bonus test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/bonus",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "bonus"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /wallets/:walletId/bonus (IDEMPOTENT retry - same referenceId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"idempotent=true\", () => pm.expect(pm.response.json().idempotent).to.eql(true));",
+                  "",
+                  "const expected = Number(pm.collectionVariables.get(\"balanceAfterBonus\"));",
+                  "pm.test(\"balance unchanged on retry\", () => pm.expect(pm.response.json().balance).to.eql(expected));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 50,\n  \"referenceId\": \"{{lastBonusRef}}\",\n  \"note\": \"Retry should be idempotent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/bonus",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "bonus"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Spend",
+      "item": [
+        {
+          "name": "POST /wallets/:walletId/spend (NEW referenceId)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('lastSpendRef', `spend_${pm.variables.replaceIn('{{$timestamp}}')}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"idempotent=false\", () => pm.expect(pm.response.json().idempotent).to.eql(false));",
+                  "pm.test(\"balance is number\", () => pm.expect(pm.response.json().balance).to.be.a('number'));",
+                  "pm.collectionVariables.set(\"balanceAfterSpend\", pm.response.json().balance);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 30,\n  \"referenceId\": \"{{lastSpendRef}}\",\n  \"note\": \"Postman spend test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/spend",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "spend"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /wallets/:walletId/spend (IDEMPOTENT retry - same referenceId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"ok=true\", () => pm.expect(pm.response.json().ok).to.eql(true));",
+                  "pm.test(\"idempotent=true\", () => pm.expect(pm.response.json().idempotent).to.eql(true));",
+                  "",
+                  "const expected = Number(pm.collectionVariables.get(\"balanceAfterSpend\"));",
+                  "pm.test(\"balance unchanged on retry\", () => pm.expect(pm.response.json().balance).to.eql(expected));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 30,\n  \"referenceId\": \"{{lastSpendRef}}\",\n  \"note\": \"Retry should be idempotent\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/spend",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "spend"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /wallets/:walletId/spend (Insufficient balance test)",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.collectionVariables.set('lastSpendFailRef', `spend_fail_${pm.variables.replaceIn('{{$timestamp}}')}`);"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status is 409 or 400\", () => pm.expect([409,400]).to.include(pm.response.code))",
+                  "pm.test(\"ok=false\", () => pm.expect(pm.response.json().ok).to.eql(false));",
+                  "pm.test(\"error present\", () => pm.expect(pm.response.json().error).to.be.a('string'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 999999,\n  \"referenceId\": \"{{lastSpendFailRef}}\",\n  \"note\": \"Should fail with insufficient balance\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/spend",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "spend"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Suggested Run Order",
+      "item": [
+        {
+          "name": "1) GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["health"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "2) GET /wallets/:walletId (meta)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "3) GET /wallets/:walletId/balance",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "balance"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "4) POST /wallets/:walletId/topup (NEW)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 100,\n  \"referenceId\": \"topup_manual_001\",\n  \"note\": \"Manual test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/topup",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "topup"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "5) POST /wallets/:walletId/spend (NEW)",
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 30,\n  \"referenceId\": \"spend_manual_001\",\n  \"note\": \"Manual test\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/wallets/{{walletId}}/spend",
+              "host": ["{{baseUrl}}"],
+              "path": ["wallets", "{{walletId}}", "spend"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [""]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://dino-wallet-service.onrender.com"
+    },
+    {
+      "key": "walletId",
+      "value": "6"
+    },
+    {
+      "key": "lastTopupRef",
+      "value": "topup_init"
+    },
+    {
+      "key": "lastBonusRef",
+      "value": "bonus_init"
+    },
+    {
+      "key": "lastSpendRef",
+      "value": "spend_init"
+    },
+    {
+      "key": "lastSpendFailRef",
+      "value": "spend_fail_init"
+    },
+    {
+      "key": "balanceAfterTopup",
+      "value": ""
+    },
+    {
+      "key": "balanceAfterBonus",
+      "value": ""
+    },
+    {
+      "key": "balanceAfterSpend",
+      "value": ""
+    }
+  ]
+}

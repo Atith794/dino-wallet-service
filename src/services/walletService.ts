@@ -141,7 +141,7 @@ export async function topupWallet(input: TopupInput){
 
       await client.query("COMMIT");
       return {
-        transaction: "Failed due to idempotency",
+        message: "Balance remains unchanged due to idempotency",
         idempotent: true,
         ...meta,
         walletId,
@@ -244,7 +244,7 @@ export async function spendFromWallet(input: SpendInput) {
       await client.query("COMMIT");
       return {
         idempotent: true,
-        transaction: "Failed due to idempotency",
+        message: "Balance remains unchanged due to idempotency",
         ...meta,
         walletId,
         balance: Number(bal.rows[0].balance),
@@ -351,7 +351,7 @@ export async function bonusWallet(input: BonusInput) {
       await client.query("COMMIT");
       return { 
         idempotent: true, 
-        transaction: "Failed due to idempotency",
+        message: "Balance remains unchanged due to idempotency",
         ...meta, 
         walletId, 
         balance: Number(bal.rows[0].balance) 
