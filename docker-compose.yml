@@ -1,0 +1,28 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Atith@91098
+      POSTGRES_DB: project_dino
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+
+  api:
+    build: .
+    environment:
+      PORT: 3000
+      DATABASE_URL: postgres://postgres:Atith@91098@localhost:5432/project_dino
+      CORS_ORIGIN: http://localhost:5173,http://localhost:3000
+      RATE_LIMIT_WINDOW_MS: 60000
+      RATE_LIMIT_MAX: 120
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+volumes:
+  pgdata:
