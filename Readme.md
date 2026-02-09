@@ -36,14 +36,9 @@ High-Level Design:
 
 1. Wallet & Asset Model:
 
-Each user can have multiple wallets.
-
-Each wallet is tied to exactly one asset type (e.g. GOLD or DIAMOND).
+Each user can have multiple wallets. Each wallet is tied to exactly one asset type (e.g. GOLD or DIAMOND).
 
 A wallet is the unit of balance and concurrency control.
-
-User ──┬── Wallet (GOLD)
-       └── Wallet (DIAMOND)
 
 2. Ledger-Based Accounting (Source of Truth):
 
@@ -57,29 +52,23 @@ Ledger entries are append-only and never mutated.
 
 This provides:
 
-Full auditability
+1) Full auditability
 
-Replayability
+2) Replayability
 
-Protection against silent data corruption
+3) Protection against silent data corruption
 
 3. Cached Balance Projection:
 
-To avoid expensive SUM() operations on large ledgers, the system maintains a cached balance projection:
-
-Stored in wallet_balances
-
-Updated transactionally with every ledger insert
-
-Ledger remains the source of truth
+To avoid expensive SUM() operations on large ledgers, the system maintains a cached balance projection, Stored in wallet_balances and they are Updated transactionally with every ledger insert. Ledger remains the source of truth.
 
 This hybrid approach provides:
 
-Fast balance reads (O(1))
+1) Fast balance reads (O(1))
 
-Strong consistency
+2) Strong consistency
 
-Ability to rebuild balances from ledger if required
+3) Ability to rebuild balances from ledger if required
 
 Database Schema (Conceptual)
 
@@ -181,13 +170,7 @@ Data Seeding:-
 
 A seed script initializes:
 
-Asset types (Gold, Diamonds)
-
-System account (Treasury)
-
-Two users with initial balances
-
-All initial balances are inserted via ledger entries, not direct balance writes
+Asset types (Gold, Diamonds), system account(Treasury) and two users with initial balances. All initial balances are inserted via ledger entries, not direct balance writes
 
 How to Run Locally?
 
@@ -201,23 +184,18 @@ Steps:
 npm install
 npm run dev
 
-
 Run schema and seed scripts:
 
-psql -U postgres -d dino_wallet -f db/schema.sql
-psql -U postgres -d dino_wallet -f db/seed.sql
+psql -U postgres -d project_dino -f db/schema.sql
+psql -U postgres -d project_dino -f db/seed.sql
 
-Future Improvements (Out of Scope)
+Future Improvements:
 
-Dockerfile & docker-compose for containerized setup
+1) Authentication & authorization
 
-Authentication & authorization
+2) Wallet-to-wallet transfers
 
-Wallet-to-wallet transfers
-
-Event-driven projections
-
-Horizontal scaling via partitioned ledgers
+3) Horizontal scaling via partitioned ledgers
 
 Summary:-
 

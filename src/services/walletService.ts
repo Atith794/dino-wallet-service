@@ -1,10 +1,10 @@
-import { pool } from '../db';
+import { pool } from '../db.js';
 
 export type TopupInput = {
     walletId: number;
     amount: number;
     referenceId: string;
-    note?:string
+    note?:string | undefined
 }
 
 type WalletMeta = {
@@ -187,7 +187,7 @@ export type SpendInput = {
   walletId: number;
   amount: number;
   referenceId: string; 
-  note?: string;
+  note?: string | undefined;
 };
 
 export async function spendFromWallet(input: SpendInput) {
@@ -304,7 +304,7 @@ export type BonusInput = {
   walletId: number;
   amount: number;
   referenceId: string; 
-  note?: string;
+  note?: string | undefined;
 };
 
 export async function bonusWallet(input: BonusInput) {

@@ -4,9 +4,9 @@ import cors from "cors";
 import helmet from "helmet";
 import rateLimit from "express-rate-limit";
 import hpp from "hpp";
-import { checkDbConnection } from "./db";
-import { walletsRouter } from "./routes/wallets";
-import { pool } from "./db";
+import { checkDbConnection } from "./db.js";
+import { walletsRouter } from "./routes/wallets.js";
+import { pool } from "./db.js";
 
 dotenv.config();
 

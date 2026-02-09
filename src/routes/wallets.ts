@@ -6,13 +6,13 @@ import {
   bonusWallet,
   getWalletBalance,
   getWalletMeta,
-} from "../services/walletService";
+} from "../services/walletService.js";
 import {
   walletIdParamSchema,
   topupBodySchema,
   spendBodySchema,
   bonusBodySchema,
-} from "../validators/wallet.validators";
+} from "../validators/wallet.validators.js";
 
 export const walletsRouter = Router();
 
