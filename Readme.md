@@ -26,6 +26,7 @@ Postgres SQL setup on Render:
   c) psql "postgresql://dino_wallet_db_user:ue9AgwmlZDFOuUjwp6Gml0OyuXYsmZDZ@dpg-d64ojscr85hc73c0laig-a.oregon-postgres.render.com/dino_wallet_db" -f db/backfill_wallet_balances.sql
   
 Postman Setup:
+
 A Postman collection is included in the path: 'postman/dino-wallet-service.postman_collection.json'.
 
 1. Import the Postman collection from /postman folder
@@ -34,6 +35,63 @@ A Postman collection is included in the path: 'postman/dino-wallet-service.postm
    - walletId = <any valid wallet id> (Set it as 3,4,5 or 6, because 3,4 points to wallets of first user and 5,6 points to wallets of second user. Choose anyone among them.)
 3. Run the collection
 
+## Seed data
+
+- Seed data is inserted into the database using the seed scripts present inside the /db folder in the root folder.
+
+---
+## Data Seeding
+
+A seed script initializes:
+
+  - Asset types (Gold, Diamonds)
+  - System account (Treasury)
+  - Two users with initial balances
+
+All initial balances are inserted via ledger entries (not direct balance writes).
+
+## Running Locally (without Docker)
+
+Pre-requisites:
+  - Node.js
+  - PostgreSQL (local)
+
+Steps:
+Run the commands: 
+  - npm install
+  - npm run dev
+
+## Create schema + seed data
+
+Database name: project_dino
+
+  - psql -U postgres -d project_dino -f db/schema.sql
+  - psql -U postgres -d project_dino -f db/seed.sql
+  - psql -U postgres -d project_dino -f db/backfill_wallet_balances.sql
+
+## Running with Docker (Local)
+
+If you are using Docker locally:
+Run the command: 
+  - docker compose up --build
+
+If you update schema/seed and want a fresh DB:
+Run the commands: 
+  - docker compose down -v
+  - docker compose up --build
+
+## Deployment (Render)
+
+  - The API is deployed as a Docker Web Service on Render.
+  - Render Postgres requires SSL, so the application enables SSL in production.
+
+After creating Render Postgres, initialize the DB using:
+
+  - psql "$DATABASE_URL" -f db/schema.sql
+  - psql "$DATABASE_URL" -f db/seed.sql
+  - psql "$DATABASE_URL" -f db/backfill_wallet_balances.sql
+
+  
 ## Tech Stack
 - **Node.js + TypeScript**
 - **Express.js** – REST API framework
@@ -49,10 +107,6 @@ A Postman collection is included in the path: 'postman/dino-wallet-service.postm
 - Row-level locking (`SELECT ... FOR UPDATE`) for concurrency control
 - Native support for constraints and idempotency keys
 
----
-
-## Seed data
-- Seed data is inserted into the database using the seed scripts present inside the /db folder in the root folder.
 ---
 
 ## High-Level Design
@@ -155,57 +209,6 @@ This makes the system self-healing:
   - avoids race-condition-prone existence checks
 
 Cached balance is always updated in the same transaction as the ledger entry.
-
-## Data Seeding
-
-A seed script initializes:
-
-  - Asset types (Gold, Diamonds)
-  - System account (Treasury)
-  - Two users with initial balances
-
-All initial balances are inserted via ledger entries (not direct balance writes).
-
-## Running Locally (without Docker)
-
-Pre-requisites:
-  - Node.js
-  - PostgreSQL (local)
-
-Steps:
-Run the commands: 
-  - npm install
-  - npm run dev
-
-## Create schema + seed data
-
-Database name: project_dino
-
-  - psql -U postgres -d project_dino -f db/schema.sql
-  - psql -U postgres -d project_dino -f db/seed.sql
-  - psql -U postgres -d project_dino -f db/backfill_wallet_balances.sql
-
-## Running with Docker (Local)
-
-If you are using Docker locally:
-Run the command: 
-  - docker compose up --build
-
-If you update schema/seed and want a fresh DB:
-Run the commands: 
-  - docker compose down -v
-  - docker compose up --build
-
-## Deployment (Render)
-
-  - The API is deployed as a Docker Web Service on Render.
-  - Render Postgres requires SSL, so the application enables SSL in production.
-
-After creating Render Postgres, initialize the DB using:
-
-  - psql "$DATABASE_URL" -f db/schema.sql
-  - psql "$DATABASE_URL" -f db/seed.sql
-  - psql "$DATABASE_URL" -f db/backfill_wallet_balances.sql
 
 ## Future Improvements
 
