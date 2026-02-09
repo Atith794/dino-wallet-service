@@ -1,7 +1,7 @@
 # Dino Ventures – Internal Wallet Service (Backend Assignment)
 
 ## Overview
-This project implements a high-integrity **internal wallet service** similar to what you would use in a gaming platform or loyalty rewards system.
+This project implements a high-integrity **internal wallet service** similar to what we would use in a gaming platform or loyalty rewards system.
 
 It manages virtual assets (e.g., **Gold Coins**, **Diamonds**) in a closed-loop system, ensuring that:
 
@@ -12,8 +12,27 @@ It manages virtual assets (e.g., **Gold Coins**, **Diamonds**) in a closed-loop 
 
 The design prioritizes **correctness, auditability, and concurrency safety**.
 
-## Live Deployment
+## Live Deployment Link
 Base URL: https://dino-wallet-service.onrender.com
+
+## API Testing (Postman)
+
+Postgres SQL setup on Render:
+
+1. After clonning the repository using the link 'https://github.com/Atith794/dino-wallet-service.git', open your terminal and navigate to the project root
+2. Run the following commands. This step is followed to setup postgres on Render with seed data:
+  a) psql "postgresql://dino_wallet_db_user:ue9AgwmlZDFOuUjwp6Gml0OyuXYsmZDZ@dpg-d64ojscr85hc73c0laig-a.oregon-postgres.render.com/dino_wallet_db" -f db/schema.sql
+  b) psql "postgresql://dino_wallet_db_user:ue9AgwmlZDFOuUjwp6Gml0OyuXYsmZDZ@dpg-d64ojscr85hc73c0laig-a.oregon-postgres.render.com/dino_wallet_db" -f db/seed.sql
+  c) psql "postgresql://dino_wallet_db_user:ue9AgwmlZDFOuUjwp6Gml0OyuXYsmZDZ@dpg-d64ojscr85hc73c0laig-a.oregon-postgres.render.com/dino_wallet_db" -f db/backfill_wallet_balances.sql
+  
+Postman Setup:
+A Postman collection is included in the path: 'postman/dino-wallet-service.postman_collection.json'.
+
+1. Import the Postman collection from /postman folder
+2. Create a Postman environment with:
+   - baseUrl = https://dino-wallet-service.onrender.com
+   - walletId = <any valid wallet id> (Set it as 3,4,5 or 6, because 3,4 points to wallets of first user and 5,6 points to wallets of second user. Choose anyone among them.)
+3. Run the collection
 
 ## Tech Stack
 - **Node.js + TypeScript**
@@ -30,6 +49,10 @@ Base URL: https://dino-wallet-service.onrender.com
 - Row-level locking (`SELECT ... FOR UPDATE`) for concurrency control
 - Native support for constraints and idempotency keys
 
+---
+
+## Seed data
+- Seed data is inserted into the database using the seed scripts present inside the /db folder in the root folder.
 ---
 
 ## High-Level Design
@@ -64,7 +87,7 @@ This hybrid approach provides:
 ---
 
 ## Database Schema (Conceptual)
-- `asset_types` – GOLD, DIAMOND, etc.
+- `asset_types` – GOLD, DIAMOND.
 - `users` – includes SYSTEM users (e.g., Treasury)
 - `wallets` – one per (user, asset)
 - `ledger_entries` – append-only transaction log
@@ -96,17 +119,6 @@ Returns the current cached balance.
 `GET /wallets/:walletId`  
 Returns wallet owner and asset information.
 
-## API Testing (Postman)
-A Postman collection is included in the repository: 'postman/dino-wallet-service.postman_collection.json'
-
-Postman Setup:
-
-1. Import the Postman collection from /postman folder
-2. Create a Postman environment with:
-   - baseUrl = https://dino-wallet-service.onrender.com
-   - walletId = <any valid wallet id> (Set it as 3,4,5 or 6, because 3,4 points to wallets of first user and 5,6 points to wallets of second user. Choose anyone among them.)
-3. Select the environment and run the collection
-
 ## Concurrency Strategy
 - Each modifying operation runs inside a **database transaction**
 - The wallet row is locked using:
@@ -116,6 +128,7 @@ SELECT id FROM wallets WHERE id = $1 FOR UPDATE;
 This guarantees serialized updates per wallet and prevents race conditions such as:
  - double-spends
  - lost updates
+
 Transactions are intentionally short-lived to reduce contention.
 
 ## Idempotency Strategy
